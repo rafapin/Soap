@@ -13,6 +13,17 @@ El caso original pide una solucion funcional para migrar datos historicos con in
 | `db` | PostgreSQL 16 | Persistencia relacional de alarmas, batches y rechazos. |
 | `docker-compose.yml` | Docker Compose | Levanta base de datos, API y frontend con un comando. |
 
+## Capturas de Pantalla
+
+### Dashboard Web
+![Dashboard de Alarmas](docs/screens/web-dashboard.png)
+
+### Listado de Alarmas
+![Listado de Alarmas](docs/screens/web-list.png)
+
+### API Docs (Swagger)
+![Documentacion API](docs/screens/api-doc.png)
+
 ## Arquitectura de Componentes
 
 ![Arquitectura de componentes](docs/diagrams/architecture-components.svg)
