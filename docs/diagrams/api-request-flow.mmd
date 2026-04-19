@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor User as Usuario
+    participant Web as SvelteKit page.server
+    participant API as FastAPI routes
+    participant Schema as Pydantic filters
+    participant Service as Query/Metrics services
+    participant Repo as SQLAlchemy repository
+    participant DB as PostgreSQL
+
+    User->>Web: abre dashboard o aplica filtros
+    Web->>API: GET /api/v1/alarms?start_time&criticality&tag&page
+    Web->>API: GET /api/v1/metrics/top-tags
+    Web->>API: GET /api/v1/metrics/summary
+    API->>Schema: validar parametros
+    alt parametros invalidos
+        Schema-->>API: error de validacion
+        API-->>Web: 422 JSON estructurado
+        Web-->>User: mensaje de error controlado
+    else parametros validos
+        Schema-->>Service: filtros normalizados
+        Service->>Repo: consulta paginada o agregada
+        Repo->>DB: SELECT con filtros e indices
+        DB-->>Repo: filas y conteos
+        Repo-->>Service: modelos/resultados
+        Service-->>API: respuesta de dominio
+        API-->>Web: JSON paginado y metricas
+        Web-->>User: dashboard actualizado
+    end

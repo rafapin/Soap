@@ -1,0 +1,41 @@
+erDiagram
+    INGESTION_BATCHES ||--o{ ALARM_REJECTIONS : "registra"
+
+    ALARMS {
+        int id PK
+        string external_alarm_id
+        string source_system
+        string tag
+        string message
+        int priority
+        string criticality
+        string state
+        string plant
+        string area
+        string equipment
+        datetime event_time
+        datetime ack_time
+        datetime clear_time
+        datetime created_at
+        datetime updated_at
+    }
+
+    INGESTION_BATCHES {
+        int id PK
+        string source_file_name
+        string file_type
+        datetime processed_at
+        string status
+        int total_rows
+        int inserted_rows
+        int rejected_rows
+        string error_message
+    }
+
+    ALARM_REJECTIONS {
+        int id PK
+        int batch_id FK
+        text raw_payload
+        text rejection_reason
+        datetime created_at
+    }

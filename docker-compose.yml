@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: scada
+      POSTGRES_PASSWORD: scada_pass
+      POSTGRES_DB: scada_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scada -d scada_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://scada:scada_pass@db:5432/scada_db
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      DEBUG: "false"
+      CORS_ORIGINS: '["http://localhost:3000"]'
+      BATCH_SIZE: "500"
+      DATASET_SIZE: "2000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health').read()"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        python scripts/generate_dataset.py --size $${DATASET_SIZE:-2000} --seed 42 &&
+        python scripts/load_dataset.py --file data/raw/alarms_dataset.csv &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PUBLIC_API_BASE_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -1,0 +1,27 @@
+flowchart TD
+    Start["Inicio de ingesta"] --> Generate["Generar dataset sintetico<br/>size=2000 seed=42"]
+    Generate --> Files["data/raw/alarms_dataset.csv<br/>data/raw/alarms_dataset.json"]
+    Files --> Read["Leer archivo CSV/JSON"]
+    Read --> Columns["Normalizar nombres de columnas"]
+    Columns --> Parse["Parsear campos<br/>fechas, prioridad, strings"]
+    Parse --> Normalize["Normalizar catalogos<br/>criticality, state, tags"]
+    Normalize --> Validate{"Fila valida?"}
+    Validate -->|No| Reject["Registrar rechazo<br/>raw_payload + motivo"]
+    Validate -->|Si| Duplicate{"Duplicado en lote?"}
+    Duplicate -->|Si| Reject
+    Duplicate -->|No| Batch["Acumular registro valido"]
+    Batch --> Bulk["Insert bulk por chunks<br/>ON CONFLICT DO NOTHING"]
+    Reject --> RejectionTable[("alarm_rejections")]
+    Bulk --> AlarmTable[("alarms")]
+    Bulk --> BatchTable[("ingestion_batches")]
+    RejectionTable --> BatchTable
+    BatchTable --> Summary["Resumen de ingesta<br/>total, insertados, rechazados"]
+
+    classDef step fill:#0f766e,stroke:#134e4a,color:#ffffff
+    classDef decision fill:#ca8a04,stroke:#854d0e,color:#111827
+    classDef table fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef reject fill:#be123c,stroke:#881337,color:#ffffff
+    class Start,Generate,Files,Read,Columns,Parse,Normalize,Batch,Bulk,Summary step
+    class Validate,Duplicate decision
+    class AlarmTable,BatchTable,RejectionTable table
+    class Reject reject

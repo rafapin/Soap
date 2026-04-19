@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Dev as Usuario
+    participant Compose as Docker Compose
+    participant DB as PostgreSQL
+    participant API as API FastAPI
+    participant Web as Dashboard SvelteKit
+
+    Dev->>Compose: docker compose up --build
+    Compose->>DB: iniciar postgres:16-alpine
+    DB-->>Compose: healthcheck pg_isready OK
+    Compose->>API: construir e iniciar contenedor api
+    API->>DB: alembic upgrade head
+    API->>API: generate_dataset.py --size 2000 --seed 42
+    API->>DB: load_dataset.py carga alarmas y rechazos
+    API-->>Compose: healthcheck /api/v1/health OK
+    Compose->>Web: construir e iniciar contenedor web
+    Web->>API: consulta SSR a /api/v1/alarms y /metrics
+    API->>DB: ejecutar consultas filtradas y agregadas
+    DB-->>API: resultados SQL
+    API-->>Web: JSON paginado y metricas
+    Web-->>Dev: dashboard en http://localhost:3000

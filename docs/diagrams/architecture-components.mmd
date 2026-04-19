@@ -1,0 +1,23 @@
+flowchart LR
+    User["Usuario / evaluador"] --> Web["Dashboard SvelteKit<br/>localhost:3000"]
+    Web -->|HTTP server-side fetch| API["FastAPI<br/>localhost:8000"]
+    API --> Routes["Rutas API<br/>alarms, metrics, health"]
+    Routes --> Services["Servicios<br/>consultas, metricas, ingesta"]
+    Services --> Repos["Repositorios SQLAlchemy"]
+    Repos --> DB[("PostgreSQL<br/>scada_db")]
+
+    Generator["generate_dataset.py"] --> Raw["CSV / JSON sintetico"]
+    Raw --> Loader["load_dataset.py"]
+    Loader --> ETL["Pipeline ETL<br/>readers, parsers, transformers, loaders"]
+    ETL --> DB
+
+    Compose["Docker Compose"] --> Web
+    Compose --> API
+    Compose --> DB
+
+    classDef app fill:#0f766e,stroke:#134e4a,color:#ffffff
+    classDef data fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef op fill:#92400e,stroke:#78350f,color:#ffffff
+    class Web,API,Routes,Services,Repos,ETL app
+    class DB,Raw data
+    class User,Generator,Loader,Compose op
