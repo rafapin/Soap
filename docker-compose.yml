@@ -1,3 +1,5 @@
+name: scada-alarm-gateway
+
 services:
   db:
     image: postgres:16-alpine
